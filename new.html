@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Reports</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('admin2.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .bg-hospital-blue { background-color: #0076D6; }
+        .bg-hospital-light { background-color: #F4F9FD; }
+        .text-hospital-text { color: #333; }
+        .btn { padding: 10px; border-radius: 5px; color: white; cursor: pointer; }
+        .btn-primary { background-color: #0076D6; }
+        .btn-secondary { background-color: #6C757D; }
+        .btn-danger { background-color: #D9534F; }
+        .btn-success { background-color: #5BC0DE; }
+        .btn-warning { background-color: #F0AD4E; }
+        .card { border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+
+        .sidebar {
+            background-color: #2D3748;
+            color: white;
+            height: 100%;
+            padding: 20px 15px;
+            border-radius: 0px 20px 20px 0px;
+        }
+        .sidebar .menu-item {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .sidebar .menu-item:hover {
+            background-color: #4A5568;
+            transform: translateX(5px);
+        }
+    </style>
+</head>
+<body class="flex bg-hospital-light">
+    <div class="w-64 sidebar flex flex-col justify-between">
+        <div>
+            <button onclick="logout()" class="menu-item bg-red-600 text-white">Logout</button>
+            <button onclick="goHome()" class="menu-item bg-green-600 text-white">Home</button>
+        </div>
+        <div class="flex-1">
+            <button onclick="viewReports()" class="menu-item bg-yellow-600 text-white">View Reports</button>
+        </div>
+    </div>
+
+    <div class="flex-1 p-6" id="adminContent">
+        <!-- Report Management Section -->
+        <div id="reportManagement" class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md card">
+            <h2 class="text-3xl font-bold mb-4 text-center text-hospital-text">Admin AYH</h2>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">ตั้งหมวดหมู่ใหม่</label>
+                <div class="flex gap-2">
+                    <input id="reportCategory" type="text" placeholder="หมวดหมู่" class="border p-2 rounded w-full">
+                    <button onclick="saveCategory()" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+            <div id="categoryList" class="mb-4 space-y-2">
+                <!-- Categories will be listed here -->
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">ข้อมูล</label>
+                <h1>หมวดหมู่</h1>
+                <select id="toppickDropdown" class="border p-2 rounded w-full mb-2"></select>
+                <h1>Name</h1>
+                <input id="reportName" type="text" placeholder="Report Name" class="border p-2 rounded w-full mb-2">
+                <h1>URL</h1>
+                <input id="reportUrl" type="url" placeholder="Enter URL (optional)" class="border p-2 rounded w-full mb-2">
+                <h1>File PDF</h1>
+                <input id="reportFile" type="file" accept=".pdf" class="border p-2 rounded w-full mb-2">
+                <h1>File image</h1>
+                <input id="imageFile" type="file" accept="image/*" class="border p-2 rounded w-full mb-2">
+                
+                <button onclick="addReport()" class="btn btn-success w-full">Add Report</button>
+            </div>
+        </div>
+
+        <!-- View Reports Section -->
+        <div id="viewReports" class="hidden max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md card">
+            <h2 class="text-3xl font-bold mb-4 text-center text-hospital-text">View Reports</h2>
+            <div id="reportContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- Edit Report Section -->
+        <div id="editReport" class="hidden max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md card">
+            <h2 class="text-3xl font-bold mb-4 text-center text-hospital-text">Edit Report</h2>
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">Category</label>
+                <select id="editCategoryDropdown" class="border p-2 rounded w-full mb-2"></select>
+            </div>
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">Name</label>
+                <input id="editReportName" type="text" class="border p-2 rounded w-full mb-2">
+            </div>
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">URL</label>
+                <input id="editReportUrl" type="url" class="border p-2 rounded w-full mb-2">
+            </div>
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">File PDF</label>
+                <input id="editReportFile" type="file" accept=".pdf" class="border p-2 rounded w-full mb-2">
+            </div>
+            <div class="mb-4">
+                <label class="block font-semibold mb-2 text-hospital-text">File Image</label>
+                <input id="editImageFile" type="file" accept="image/*" class="border p-2 rounded w-full mb-2">
+            </div>
+            <button onclick="saveEditedReport()" class="btn btn-success w-full">Save Changes</button>
+        </div>
+    </div>
+
+    <script>
+        function addReport() {
+    const category = document.getElementById('toppickDropdown').value;
+    const name = document.getElementById('reportName').value;
+    const url = document.getElementById('reportUrl').value;
+    const pdfFile = document.getElementById('reportFile').files[0];
+    const imageFile = document.getElementById('imageFile').files[0];
+
+            if (!category || !name || (!url && !pdfFile && !imageFile)) {
+            return alert("กรุณากรอกข้อมูลให้ครบถ้วน หรือแนบไฟล์อย่างน้อยหนึ่งไฟล์");
+        }
+
+
+    let reports = JSON.parse(localStorage.getItem('reports')) || [];
+    let newReport = { category, name, url: '', type: '' };
+
+    if (pdfFile) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            newReport.url = event.target.result;
+            newReport.type = 'pdf';
+            reports.push(newReport);
+            localStorage.setItem('reports', JSON.stringify(reports));
+            alert("เพิ่มรายงานสำเร็จ!");
+            resetForm();
+        };
+        reader.readAsDataURL(pdfFile);
+    } else if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            newReport.url = event.target.result;
+            newReport.type = 'image';
+            reports.push(newReport);
+            localStorage.setItem('reports', JSON.stringify(reports));
+            alert("เพิ่มรายงานสำเร็จ!");
+            resetForm();
+        };
+        reader.readAsDataURL(imageFile);
+    } else {
+        newReport.url = url;
+        newReport.type = 'link';
+        reports.push(newReport);
+        localStorage.setItem('reports', JSON.stringify(reports));
+        alert("เพิ่มรายงานสำเร็จ!");
+        resetForm();
+    }
+    
+}
+
+function resetForm() {
+    document.getElementById('reportName').value = '';
+    document.getElementById('reportUrl').value = '';
+    document.getElementById('reportFile').value = '';
+    document.getElementById('imageFile').value = '';
+}
+
+        function logout() {
+            if (confirm("Are you sure you want to log out?")) {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            }
+        }
+
+        function viewReports() {
+            // Hide the report management section and show the view reports section
+            document.getElementById('reportManagement').classList.add('hidden');
+            document.getElementById('viewReports').classList.remove('hidden');
+            loadReports();  // Load the reports
+        }
+
+        function loadReports() {
+            const storedReports = JSON.parse(localStorage.getItem('reports')) || [];
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = '';
+
+            storedReports.forEach((report, index) => {
+                let content = report.type === 'pdf' 
+                    ? `<iframe src="${report.url}" class="w-full h-96 mt-2 border"></iframe>`
+                    : `<img src="${report.url}" class="w-full h-auto mt-2 border rounded-lg">`;
+
+                container.innerHTML += `
+                    <div class="border p-4 rounded shadow-md card">
+                        <h3 class="text-xl font-semibold text-hospital-text">${report.name}</h3>
+                        <p class="text-gray-600">Category: ${report.category}</p>
+                        ${content}
+                        <button onclick="editReport(${index})" class="btn btn-warning w-full mt-2">Edit</button>
+                        <button onclick="deleteReport(${index})" class="btn btn-danger w-full mt-2">Delete</button>
+                    </div>`;
+            });
+        }
+
+        function editReport(index) {
+            const reports = JSON.parse(localStorage.getItem('reports')) || [];
+            const report = reports[index];
+
+            // Populate edit form with existing data
+            document.getElementById('editReportName').value = report.name;
+            document.getElementById('editReportUrl').value = report.url;
+
+            // Populate categories dropdown
+            const categoryDropdown = document.getElementById('editCategoryDropdown');
+            const categories = JSON.parse(localStorage.getItem('selectedCategories')) || [];
+            categoryDropdown.innerHTML = '<option value="">Select Category</option>';
+            categories.forEach(category => {
+                let option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryDropdown.appendChild(option);
+            });
+
+            // Show the Edit Report form
+            document.getElementById('viewReports').classList.add('hidden');
+            document.getElementById('editReport').classList.remove('hidden');
+            
+            // Store the index of the report being edited
+            localStorage.setItem('editingReportIndex', index);
+        }
+
+        function saveEditedReport() {
+            const index = localStorage.getItem('editingReportIndex');
+            const name = document.getElementById('editReportName').value;
+            const url = document.getElementById('editReportUrl').value;
+            const category = document.getElementById('editCategoryDropdown').value;
+            const fileInput = document.getElementById('editReportFile');
+            const imageInput = document.getElementById('editImageFile');
+
+            if (!name || !category || (!fileInput.files.length && !imageInput.files.length && !url)) {
+                return alert("Please complete the form.");
+            }
+
+            let reports = JSON.parse(localStorage.getItem('reports')) || [];
+            let report = reports[index];
+
+            report.name = name;
+            report.category = category;
+            report.url = url || '';
+
+            if (fileInput.files.length) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    report.url = event.target.result;
+                    report.type = 'pdf';
+                    reports[index] = report;
+                    localStorage.setItem('reports', JSON.stringify(reports));
+                    loadReports();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else if (imageInput.files.length) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    report.url = event.target.result;
+                    report.type = 'image';
+                    reports[index] = report;
+                    localStorage.setItem('reports', JSON.stringify(reports));
+                    loadReports();
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                reports[index] = report;
+                localStorage.setItem('reports', JSON.stringify(reports));
+                loadReports();
+            }
+
+            // Go back to the view reports page
+            document.getElementById('editReport').classList.add('hidden');
+            document.getElementById('viewReports').classList.remove('hidden');
+        }
+
+        function deleteReport(index) {
+            let reports = JSON.parse(localStorage.getItem('reports')) || [];
+            reports.splice(index, 1);
+            localStorage.setItem('reports', JSON.stringify(reports));
+            loadReports();
+        }
+
+        function deleteCategory(category) {
+            let categories = JSON.parse(localStorage.getItem('selectedCategories')) || [];
+            categories = categories.filter(c => c !== category);
+            localStorage.setItem('selectedCategories', JSON.stringify(categories));
+            loadCategories();
+        }
+
+        function saveCategory() {
+            const category = document.getElementById('reportCategory').value;
+
+            if (!category) {
+                return alert("Please enter a category name.");
+            }
+
+            let categories = JSON.parse(localStorage.getItem('selectedCategories')) || [];
+            if (categories.includes(category)) {
+                return alert("Category already exists.");
+            }
+
+            categories.push(category);
+            localStorage.setItem('selectedCategories', JSON.stringify(categories));
+
+            document.getElementById('reportCategory').value = '';  // Clear the input field
+            loadCategories();  // Reload categories in the dropdown
+        }
+
+        function loadCategories() {
+            const categories = JSON.parse(localStorage.getItem('selectedCategories')) || [];
+            const categoryDropdown = document.getElementById('toppickDropdown');
+            const categoryList = document.getElementById('categoryList');
+            
+            categoryDropdown.innerHTML = '<option value="">Select Category</option>'; // Default option
+            categoryList.innerHTML = '';
+
+            categories.forEach(category => {
+                let option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryDropdown.appendChild(option);
+
+                categoryList.innerHTML += `
+                    <div class="flex justify-between items-center border p-2 rounded shadow-md">
+                        <span>${category}</span>
+                        <button onclick="deleteCategory('${category}')" class="btn btn-danger text-xs">Delete</button>
+                    </div>
+                `;
+            });
+        }
+        function goHome() {
+            // Reload the current page (Admin page)
+            window.location.reload();
+        }
+
+        // Initial setup when the page loads
+        loadCategories();
+    </script>
+</body>
+</html>

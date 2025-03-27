@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    
+    <style>
+        body {
+            background-image: url('admin1.jpg'); /* เปลี่ยนเป็นไฟล์ของคุณ */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: 'Arial', sans-serif;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9); /* ให้โปร่งใสนิดหน่อย */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #007BFF;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #218838;
+        }
+        .error-text {
+            color: #dc3545;
+        }
+    </style>
+    
+</head>
+<body class="flex items-center justify-center h-screen">
+
+    <div class="card w-96">
+        <h2 class="text-3xl font-semibold mb-6 text-center text-gray-800">เข้าสู่ระบบ</h2>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-medium">ชื่อผู้ใช้งาน</label>
+            <input id="username" type="text" class="border border-gray-300 p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="กรอกชื่อผู้ใช้งาน">
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 font-medium">รหัสผ่าน</label>
+            <input id="password" type="password" class="border border-gray-300 p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="กรอกรหัสผ่าน">
+        </div>
+        <button onclick="login()" class="w-full p-3 rounded bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 mb-4">เข้าสู่ระบบ</button>
+        <button onclick="addUser()" class="w-full p-3 rounded bg-green-500 text-white hover:bg-green-600 transition-all duration-300">เพิ่มผู้ใช้งานใหม่</button>
+        <p id="error" class="error-text text-center mt-4 hidden">ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง</p>
+    </div>
+
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                localStorage.setItem('currentUser', username);
+                window.location.href = 'new.html';
+            } else {
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        function addUser() {
+            const adminPass = prompt("Enter Admin Password:");
+
+            if (adminPass === "0123") {
+                const newUsername = prompt("Enter new username:");
+                const newPassword = prompt("Enter new password:");
+
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                
+                if (users.find(u => u.username === newUsername)) {
+                    alert("Username already exists!");
+                    return;
+                }
+
+                users.push({ username: newUsername, password: newPassword });
+                localStorage.setItem('users', JSON.stringify(users));
+
+                localStorage.setItem('currentUser', newUsername);
+                window.location.href = 'new.html';
+            } else {
+                alert("Incorrect Admin Password!");
+            }
+        }
+    </script>
+</body>
+</html>
