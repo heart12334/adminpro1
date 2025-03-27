@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User - Reports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        .bg-main {
+            background-image: url('ayh02.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .bg-sidebar {
+            background-image: url('your-sidebar-background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 h-screen w-screen flex relative">
+
+    <!-- Main Content -->
+    <div class="flex-1 p-6 flex flex-col bg-main">
+        <div class="w-full h-full p-6 rounded-lg shadow-md overflow-auto card">
+            <h2 class="text-3xl text-center font-semibold text-gray-800 mb-4">ข้อมูลสถิติของโรงพยาบาล</h2>
+            <div id="reportContainer" class="space-y-4 overflow-auto">
+                <p class="text-center text-gray-500">เลือกหมวดหมู่เพื่อดูรายงาน</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="w-64 p-4 shadow-lg rounded-lg overflow-auto bg-sidebar">
+        <h2 class="text-lg font-semibold mb-2 text-center text-gray-800">หมวดหมู่</h2>
+        
+        <button onclick="resetReports()" class="border p-2 rounded shadow-md text-center bg-gray-200 w-full mb-2">
+            <p class="text-gray-700 font-medium">🏠 Home</p>
+        </button>
+        <div id="dropcardContainer" class="space-y-2"></div>
+    </div>
+
+    <!-- Modal for Enlarged Image -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 modal-overlay">
+        <div class="relative modal-content">
+            <img id="modalImage" class="max-w-full max-h-screen rounded-lg shadow-lg">
+            <button onclick="closeModal()" class="absolute top-2 right-2 bg-white px-3 py-1 rounded-full shadow-lg text-lg font-bold">✕</button>
+        </div>
+    </div>
+
+    <script>
+        const categoriesWithImages = [
+            { name: "1. กลุ่มโรคผู้ป่วยในที่พบบ่อย ปีงบประมาณ 2567" },
+            { name: "2. สถิติผู้รับบริการประเภทผู้ป่วยในปี 2567" },
+            { name: "3. กลุ่มโรคผู้ป่วยนอกที่พบบ่อย ปีงบประมาณ 2567" },
+            { name: "4. สถิติผู้รับบริการประเภทผู้ป่วยนอกปี 2567" },
+            { name: "5. กลุ่มโรคผู้ป่วยในที่เป็นสาเหตุการตายสูงสุด ปีงบประมาณ 2567" },
+            
+        ];
+        const reports = [
+            { name: "1. กลุ่มโรคผู้ป่วยในที่พบบ่อย ปีงบประมาณ 2567", category: "1. กลุ่มโรคผู้ป่วยในที่พบบ่อย ปีงบประมาณ 2567", image: "no1.jpg", url: "https://app.powerbi.com/view?r=eyJrIjoiMWI5NDJmOGUtZmIyZi00NmZjLWE2NDAtYWFlZTYxNWU3MjA0IiwidCI6IjMyNGE3Y2NjLWY3ZGItNDE1MC05YzRmLWVlZWM3NDY2MmM0YSIsImMiOjEwfQ%3D%3D" },
+
+            { name: "2. สถิติผู้รับบริการประเภทผู้ป่วยในปี 2567", category: "2. สถิติผู้รับบริการประเภทผู้ป่วยในปี 2567", image: "no2.jpg", url: "https://app.powerbi.com/view?r=eyJrIjoiNjAzZWZlZTktYjlkOC00ZmU2LThkZDAtMDI0ZWFlNjUwNDFkIiwidCI6IjMyNGE3Y2NjLWY3ZGItNDE1MC05YzRmLWVlZWM3NDY2MmM0YSIsImMiOjEwfQ%3D%3D" },
+
+            { name: "3. กลุ่มโรคผู้ป่วยนอกที่พบบ่อย ปีงบประมาณ 2567", category: "3. กลุ่มโรคผู้ป่วยนอกที่พบบ่อย ปีงบประมาณ 2567", image: "no3.jpg", url: "https://app.powerbi.com/view?r=eyJrIjoiNjM5MDUxZmYtYmFlMC00M2M4LTg1NzUtM2E0ZmJkNjlmZTQ0IiwidCI6IjMyNGE3Y2NjLWY3ZGItNDE1MC05YzRmLWVlZWM3NDY2MmM0YSIsImMiOjEwfQ%3D%3D" },
+
+            { name: "4. สถิติผู้รับบริการประเภทผู้ป่วยนอกปี 2567", category: "4. สถิติผู้รับบริการประเภทผู้ป่วยนอกปี 2567", image: "no4.jpg", url: "https://app.powerbi.com/view?r=eyJrIjoiMGQ0YjljYmYtYWU4ZC00N2IzLWIyN2YtYmRjMWEzYjYwNDFkIiwidCI6IjMyNGE3Y2NjLWY3ZGItNDE1MC05YzRmLWVlZWM3NDY2MmM0YSIsImMiOjEwfQ%3D%3D" },
+
+            { name: "5. กลุ่มโรคผู้ป่วยในที่เป็นสาเหตุการตายสูงสุด ปีงบประมาณ 2567", category: "5. กลุ่มโรคผู้ป่วยในที่เป็นสาเหตุการตายสูงสุด ปีงบประมาณ 2567", image: "no5.jpg", url: "https://app.powerbi.com/view?r=eyJrIjoiNTEwYTkzYjItOTFmZS00NTBlLWE1MjEtNDdiZGM2MWY3NzA1IiwidCI6IjMyNGE3Y2NjLWY3ZGItNDE1MC05YzRmLWVlZWM3NDY2MmM0YSIsImMiOjEwfQ%3D%3D" }
+        ];
+
+        function loadDropcards() {
+            const container = document.getElementById('dropcardContainer');
+            container.innerHTML = '';
+
+            categoriesWithImages.forEach(cat => {
+                container.innerHTML += `
+                    <button onclick="filterReports('${cat.name}')" class="border p-2 rounded shadow-md text-center bg-blue-100 w-full hover:bg-blue-200 flex items-center">
+                        <p class="text-blue-700 font-medium">${cat.name}</p>
+                    </button>`;
+            });
+        }
+
+        function filterReports(category) {
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = '';
+
+            const filteredReports = reports.filter(report => report.category === category);
+
+            if (filteredReports.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500">ไม่มีรายงานในหมวดหมู่ ${category}</p>`;
+                return;
+            }
+
+            filteredReports.forEach(report => {
+                container.innerHTML += `
+                    <div class="border p-4 rounded shadow-md card">
+                        <h3 class="text-xl font-semibold text-gray-800">${report.name}</h3>
+                        <img src="${report.image}" class="w-full h-auto mt-2 border rounded-lg cursor-pointer" onclick="openModal('${report.image}')">
+                        <div class="mt-4 text-center">
+                            <a href="${report.url}" class="inline-block bg-blue-500 text-white p-2 rounded shadow-md hover:bg-blue-600">
+                                View Report
+                            </a>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function openModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        window.onload = loadDropcards;
+    </script>
+
+</body>
+</html>
